@@ -1,26 +1,49 @@
 const { Command } = require('commander');
 const { version } = require('./package.json');
 const { exec } = require('child_process');
-
 const fs = require('fs');
+
 const program = new Command();
 
-function SupabaseGen(id) {
-    fs.mkdirSync('./transpile', { recursive: true })
-    fs.writeFileSync('./transpile/supabase_transpile.ts', '');
+function createDirectory(path) {
+    try {
+        fs.mkdirSync(path, { recursive: true });
+        console.log(`Directory created: ${path}`);
+    } catch (err) {
+        console.error(`Error creating directory: ${path}\n${err.message}`);
+    }
+}
 
-    return `npx supabase gen types typescript --project-id ${id} --schema public > ./transpile/supabase_transpile.ts`;
+function writeToFile(filePath, content) {
+    try {
+        fs.writeFileSync(filePath, content);
+        console.log(`File written: ${filePath}`);
+    } catch (err) {
+        console.error(`Error writing to file: ${filePath}\n${err.message}`);
+    }
+}
+
+function SupabaseGen(projectId) {
+    const outputPath = './transpile/supabase_transpile.ts';
+
+    createDirectory('./transpile');
+    writeToFile(outputPath, '');
+
+    return `npx supabase gen types typescript --project-id ${projectId} --schema public > ${outputPath}`;
 }
 
 function DartGen() {
-    fs.readFile('./transpile/supabase_transpile.ts', 'utf8', function (err, data) {
+    const inputPath = './transpile/supabase_transpile.ts';
+
+    fs.readFile(inputPath, 'utf8', (err, data) => {
         if (err) {
-            return console.log(err);
+            console.error(`Error reading file: ${inputPath}\n${err.message}`);
+            return;
         }
 
-        exec('npx ts2dart ./transpile/supabase_transpile.ts', (error) => {
+        exec(`npx ts2dart ${inputPath}`, (error) => {
             if (error) {
-                console.log(`error: ${error.message}`);
+                console.error(`Error transpiling to Dart: ${error.message}`);
                 return;
             }
 
@@ -30,22 +53,17 @@ function DartGen() {
 }
 
 program
-    .name('Supabase Type Transpiler')
-    .description('Supabase Dart Model Generator')
-    .version(version);
+    .version(version)
+    .description('A tool for generating Supabase types and transpiling them to Dart models');
 
-program.command('transpile')
-    .description('Transpile Supabase Types to Dart Models')
-    .argument('<Supabase Project ID>', 'string to split')
-    .action((id) => {
-        exec(SupabaseGen(id), (error) => {
-            if (error) {
-                console.log(`error: ${error.message}`);
-                return;
-            }
+program
+    .command('supabase-gen <projectId>')
+    .description('Generate Supabase typescript types')
+    .action(SupabaseGen);
 
-            DartGen()
-        });
-    });
+program
+    .command('dart-gen')
+    .description('Transpile Supabase types to Dart models')
+    .action(DartGen);
 
-program.parse();
+program.parse(process.argv);
