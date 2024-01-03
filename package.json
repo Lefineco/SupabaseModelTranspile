@@ -1,0 +1,22 @@
+{
+  "name": "dart-supabase-model",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "transpile": "concurrently \"command1 arg\" \"command2 arg\""
+  },
+  "keywords": [
+    "supabase",
+    "types",
+    "flutter",
+    "dart"
+  ],
+  "author": "Fatih Yildiz",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "concurrently": "^8.2.2",
+    "ts2dart": "^0.9.11"
+  }
+}
